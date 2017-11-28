@@ -6,6 +6,7 @@ output:
   html_document:
     fig_height: 4.6
     fig_width: 8.3
+    highlight: zenburn
     number_sections: yes
     toc: yes
     toc_depth: 2
@@ -37,48 +38,48 @@ library(units)
 q0 <- opq(bbox = c(2.2247, 48.8188, 2.4611, 48.9019)) 
 
 # extract Paris boundaries
-q1 <- add_osm_feature(opq = q0, key = 'name', value = "Paris", value_exact = TRUE)
+q1 <- add_osm_feature(opq = q0, key = 'name', value = "Paris")
 res1 <- osmdata_sf(q1)
 paris <- st_geometry(res1$osm_multipolygons[1,])
 
 # extract the Seine river
-q2 <- add_osm_feature(opq = q0, key = 'name', value = "La Seine", value_exact = TRUE)
+q2 <- add_osm_feature(opq = q0, key = 'name', value = "La Seine")
 res2 <- osmdata_sf(q2)
 seine1 <- st_geometry(res2$osm_multilines)
-q2b <- add_osm_feature(opq = q0, key = 'name', value = "La Seine - Bras de la Monnaie", 
-                       value_exact = FALSE)
+q2b <- add_osm_feature(opq = q0, key = 'name', 
+                       value = "La Seine - Bras de la Monnaie")
 res2b <- osmdata_sf(q2b)
 seine2 <- st_geometry(res2b$osm_lines)
 
 # extract Parks and Cemetaries
-q3 <- add_osm_feature(opq = q0, key = 'leisure', value = "park", value_exact = TRUE)
+q3 <- add_osm_feature(opq = q0, key = 'leisure', value = "park")
 res3 <- osmdata_sf(q3)
 parc1 <- st_geometry(res3$osm_polygons)
 parc2 <- st_geometry(res3$osm_multipolygons)
-q4 <- add_osm_feature(opq = q0, key = 'landuse', value = "cemetery", value_exact = TRUE)
+q4 <- add_osm_feature(opq = q0, key = 'landuse', value = "cemetery")
 res4 <- osmdata_sf(q4)
 parc3 <- st_geometry(res4$osm_polygons)
 
 # extract Quartiers
-q5 <- add_osm_feature(opq = q0, key = 'admin_level', value = "10", value_exact = TRUE)
+q5 <- add_osm_feature(opq = q0, key = 'admin_level', value = "10")
 res5 <- osmdata_sf(q5)
 quartier <- res5$osm_multipolygons
 
 # extract Bars & Pubs
-q6 <- add_osm_feature(opq = q0, key = 'amenity', value = "bar", value_exact = TRUE)
+q6 <- add_osm_feature(opq = q0, key = 'amenity', value = "bar")
 res6 <- osmdata_sf(q6)
 bar <- res6$osm_points
-q7 <- add_osm_feature(opq = q0, key = 'amenity', value = "pub", value_exact = TRUE)
+q7 <- add_osm_feature(opq = q0, key = 'amenity', value = "pub")
 res7 <- osmdata_sf(q7)
 pub <- res7$osm_points
 
 # extract Metro stations
-q8 <- add_osm_feature(opq = q0, key = 'station', value = "subway", value_exact = TRUE)
+q8 <- add_osm_feature(opq = q0, key = 'station', value = "subway")
 res8 <- osmdata_sf(q8)
 metro <- res8$osm_points
 
 # extract Restaurant
-q9 <- add_osm_feature(opq = q0, key = 'amenity', value = "restaurant", value_exact = TRUE)
+q9 <- add_osm_feature(opq = q0, key = 'amenity', value = "restaurant")
 res9 <- osmdata_sf(q9)
 resto <- res9$osm_points
 
@@ -145,16 +146,19 @@ save(list= c("paris", "quartier", "seine", "parc", "bars", "metro", "resto"),
 ```
 
 
-Let's see what we have now : 
+>**If you want to skip the downloading & cleaning part, you can start here.** 
 
-```{r, echo=FALSE, message=FALSE}
+```{r, echo=TRUE, message=FALSE}
+library(sf)
+library(units)
 load("data/paname.RData")
 ```
+
+Let's visualize our data: 
 
 ```{r, message=FALSE}
 library(cartography)
 
-# 1st map
 par(mar = c(0,0,1.2,0))
 plot(paris, col = "#D9D0C9", border = NA, bg = "#FBEDDA")
 plot(parc, col = "#CDEBB2", border = NA, add=T)
@@ -177,11 +181,11 @@ layoutLayer(title = "Paris", scale = 1,
 
 
 
-# Parisian Bars
+# Bars in Paris
 
-## Quartier Maps
+## Maps at the Quartier Level
 
-We will first have a look at the number of bars in each parisian quartier. 
+We will first have a look at the number of bars in each quartier (a quartier is a neighborhood). 
 
 ```{r, message=FALSE, cache=TRUE, warning=FALSE}
 # count the number of bars in each quartier
@@ -197,7 +201,7 @@ propSymbolsLayer(x = quartier, var = "nbar", inches = 0.2, col = "red",
                  legend.pos = "topright", 
                  legend.title.txt = "Number of bars")
 plot(paris, add=T, lwd = 0.7)
-layoutLayer(title = "Bars Repartition in Paris", scale = 1,
+layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
             tabtitle = TRUE, frame = F, 
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
@@ -217,13 +221,13 @@ plot(parc, col = "#E2CCB5", border = NA, add=T)
 plot(seine, col = "#AAD3DF", add=T, lwd = 4)
 plot(st_geometry(quartier), col = NA,lty = 2, lwd = 0.2, add=T)
 plot(paris, add=T, lwd = 0.7)
-layoutLayer(title = "Bars Repartition in Paris", scale = 1,
+layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
             tabtitle = TRUE, frame = F, 
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
 ```
 
-It is also possible to combine the number of bars and their density in a single map. 
+It is possible to combine the number of bars and their density in a single map. 
 
 ```{r, message=FALSE, cache=TRUE, warning=FALSE}
 par(mar = c(0,0,1.2,0))
@@ -239,16 +243,15 @@ propSymbolsChoroLayer(x = quartier, var = "nbar", var2 = "dbar",
                  legend.var2.title.txt = "Bars bensity\nper km2",
                  legend.var.title.txt = "Number of bars")
 plot(paris, add=T, lwd = 0.7)
-layoutLayer(title = "Bars Repartition in Paris", scale = 1,
+layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
             tabtitle = TRUE, frame = F, 
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
 ```
 
-## Subway Station Maps
+## Maps at the Subway Station Level
 
 Here, we first compute the mean minimal distance between two subway stations. 
-
 
 ```{r, eval=TRUE}
 # distance between all stations
@@ -258,6 +261,11 @@ diag(mat) <- 10000
 dmin <- apply(mat, 2, min)
 # mean minimum distance 
 (meandmin <- mean(dmin))
+```
+
+Then, we use this distance as a buffer around each station and count the number of bars in it. 
+
+```{r, eval=TRUE, cache=TRUE}
 
 # count the number of bars within this distance for each subway station
 metro$nbar <- lengths(st_covers(st_buffer(x = metro, dist = meandmin), bars))
@@ -267,6 +275,7 @@ plot(paris, col = "#D9D0C9", border = NA, bg = "#FBEDDA")
 plot(parc, col = "#CDEBB2", border = NA, add=T)
 plot(seine, col = "#AAD3DF", add=T, lwd = 4)
 plot(st_geometry(quartier), col = NA,lty = 2, lwd = 0.2, add=T)
+plot(paris, add=T, lwd = 0.7)
 propSymbolsChoroLayer(x = metro, var = "nbar", var2 = "nbar",
                       col = carto.pal("wine.pal",5), inches = 0.1,
                       method = "fisher-jenks", nclass = 5, add=T,
@@ -275,32 +284,32 @@ propSymbolsChoroLayer(x = metro, var = "nbar", var2 = "nbar",
                       legend.var2.pos = "right",legend.var.style = "e",
                       legend.var.title.txt = "Number of bars\naround the station", 
                       legend.var2.title.txt = "Number of bars\naround the station")
-plot(paris, add=T, lwd = 0.7)
-layoutLayer(title = "Bars Repartition in Paris", scale = 1,
+layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
             tabtitle = TRUE, frame = F, 
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
-
-
-
 ```
 
 
 
 
-## Interactive Map
+## Interactive Bar Map
 
-Thanks to the `leaflet` package we make an interactive map of the number of bars around each subway station. 
+Thanks to the [`leaflet`](https://github.com/rstudio/leaflet) package we can make an interactive map of the number of bars around each subway station. 
 
 
 ```{r, eval=TRUE}
 library(leaflet)
-## Initialisation 
+# transform to lon/lat projection WGS84
 metrounp <- st_transform(metro, 4326)
+# order the table to have greater circles below smaller ones
 metrounp <- metrounp[order(metrounp$nbar, decreasing = T),]
+# compute the radii of the circles
 metrounp$size <- sqrt(metrounp$nbar*15 / pi)
+# create a label
 metrounp$label <- paste0("<b>", metrounp$name, "</b> <br>", 
                          metrounp$nbar," bars à proximité.")
+# create the interactive map...
 m <- leaflet(padding = 0)
 m <- addTiles(m)
 m <- addCircleMarkers(map = m, 
@@ -312,22 +321,24 @@ m <- addCircleMarkers(map = m,
                       fillOpacity = 100,
                       popup = metrounp$label,
                       color = "white")
+# ... and display it
 m
 ```
 
 
 ## Smoothed analysis of the bars spatial distribution
 
+With the [`spatstat`](https://github.com/spatstat/spatstat) package we compute a smoothed image of the spatial distribution of bars. We use a Spatial Kernel Density Estimation with a gaussian smoothing kernel. 
+
 ```{r, message=FALSE, cache=TRUE, warning=FALSE}
 library(spatstat)
 library(maptools)
 library(raster)
-
 bb <- as(bars, "Spatial")
 bbowin <- as.owin(as(paris, "Spatial"))
 pts <- coordinates(bb)
 p <- ppp(pts[,1], pts[,2], window=bbowin)
-ds <- density.ppp(p, sigma = 200, eps = c(20,20))
+ds <- density.ppp(p, sigma = 200, eps = c(20,20), kernel="epanechnikov")
 rasdens <- raster(ds) * 1000 * 1000
 rasdens <- rasdens+1
 par(mar = c(0,0,1.2,0))
@@ -336,46 +347,29 @@ cols <- colorRampPalette(c("black","#940000", "white"))(length(bks)-1)
 plot(paris, col = NA, border = NA, main="", bg = "#FBEDDA")
 plot(rasdens, breaks= bks, col=cols, add = T,legend=F)
 legendChoro(pos = "topright",cex = 0.7,
-            title.txt = "Densité de Bars\nkde, sigma=200m\n(bars par km2)",
-            breaks = bks-1, nodata = FALSE,
+            title.txt = "Bar density\nKDE, sigma=200m\n(bars per km2)",
+            breaks = bks-1, nodata = FALSE,values.rnd = 0,
             col = cols)
 plot(seine, col = "#AAD3DF", add=T, lwd = 4)
 plot(parc, col = "#CDEBB235", border = NA, add=T)
 plot(quartier$geometry, add=T, border = "white",lty = 2, lwd = 0.1)
 plot(bars, add=T, col = "#0000ff90", pch = 20, cex = 0.1)
 plot(paris, col = NA, add=T)
-layoutLayer(title = "Les bars à Paris", scale = 1,
-            tabtitle = TRUE, 
-            sources = "Map data © OpenStreetMap contributors, under CC BY SA.", 
-            author = "cartography 2.0.2") 
+north(pos = c(661171.8,6858500))
+layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
+            tabtitle = TRUE, frame = FALSE,
+            author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
+            sources = "cartography 2.0.2") 
 ```
 
 
 
 
-# Analyse et cartographie des restaurants à Paris
+# Restaurants in Paris
 
-## Les données 
+We can make the same kind of maps using other OSM points data. The following are maps of restaurants. Since we would have to repeat almost the same code multiple times, we create a custom function to create these maps. 
 
-```{r, message=FALSE, cache=TRUE, warning=FALSE}
-# 1st map
-par(mar = c(0,0,1.2,0))
-plot(paris, col = "#D9D0C9", border = NA, bg = "#FBEDDA")
-plot(parc, col = "#CDEBB2", border = NA, add=T)
-plot(seine, col = "#AAD3DF", add=T, lwd = 4)
-plot(st_geometry(quartier), col = NA,lty = 2, lwd = 0.2, add=T)
-plot(resto, add=T, col = "blue", pch = 20, cex = 0.1)
-layoutLayer(title = "Tous les restaurants", scale = 1,
-            north = T,
-            tabtitle = TRUE, 
-            sources = "Map data © OpenStreetMap contributors, under CC BY SA.", 
-            author = "cartography 2.0.2") 
-
-```
-
-
-## Cartes de densités
-
+## Creating a Function
 ```{r, message=FALSE, cache=TRUE, warning=FALSE}
 densityMap <- function(x = resto, cuisine = NULL, title, sigma ){
   opar <- par(mar = c(0,0,0,0))
@@ -389,38 +383,55 @@ densityMap <- function(x = resto, cuisine = NULL, title, sigma ){
   ds <- density.ppp(p, sigma = sigma, eps = c(20,20))
   rasdens <- raster(ds) * 1000 * 1000
   rasdens <- rasdens+1
-  xx <- getBreaks(values(rasdens), nclass = 12, method = "equal")
-  cols <- colorRampPalette(c("black", "#940000", "white"))(length(xx)-1)
+  bks <- getBreaks(values(rasdens), nclass = 12, method = "equal")
+  cols <- colorRampPalette(c("black", "#940000", "white"))(length(bks)-1)
   plot(paris, col = NA, border = NA, main="")
-  image(rasdens, breaks= xx, col=cols, add = T,legend=F)
-  legendChoro(pos = "topright",cex = 0.7,title.cex = 1,
-              title.txt = paste0(title, "\nn=",nrow(pts)),
-              breaks = xx-1, nodata = FALSE,values.rnd = 0,
+  image(rasdens, breaks= bks, col=cols, add = T,legend=F)
+  legendChoro(pos = "topright",cex = 0.7,title.cex = .8,
+              title.txt = paste0(title, "\nsigma=500m,\nn=",nrow(pts)),
+              breaks = bks-1, nodata = FALSE,values.rnd = 0,
               col = cols)
   plot(seine, col = "#AAD3DF", add=T, lwd = 4)
   plot(parc, col = "#CDEBB235", border = NA, add=T)
   plot(quartier$geometry, add=T, border = "white",lty = 2, lwd = 0.1)
   plot(st_geometry(x), add=T, col = "blue", pch = 20, cex = 0.1)
+  plot(paris, col = NA, add=T)
   barscale(size = 1)
   mtext(text = "cartography 2.0.2\nMap data © OpenStreetMap contributors, under CC BY SA.", 
         side = 1, line = -1, adj = c(0.01,0.01), cex = 0.6, font = 3)
   north(pos = c(661171.8,6858051))
   par(opar)
 }
-
-densityMap(x = resto, title = "Tous les restaurants", sigma = 500)
-densityMap(x = resto, cuisine = c('japanese','sushi'), title = "Cuisine japonaise", sigma = 500)
-densityMap(x = resto, cuisine = c('pizza','italian'), title = "Cuisine italienne", sigma = 500)
-densityMap(x = resto, cuisine = c('chinese'), title = "Cuisine chinoise", sigma = 500)
-densityMap(x = resto, cuisine = c('korean'), title = "Cuisine coréenne", sigma = 500)
-densityMap(x = resto, cuisine = c('indian'), title = "Cuisine Indienne", sigma = 500)
-densityMap(x = resto, cuisine = c('asian', "thai", "vietnamese"), title = "Cuisine asiatique", sigma = 500)
-
 ```
 
-# Pour la reproductibilité...
+Here is a test of the function for all restaurants: 
+```{r, message=FALSE, cache=TRUE, warning=FALSE}
+densityMap(x = resto, title = "All Restaurants", sigma = 500)
+```
 
-Voici les informations sur ma configuration : 
+
+
+## Restaurants Maps by Cuisine
+
+```{r, message=FALSE, cache=TRUE, warning=FALSE}
+densityMap(x = resto, cuisine = c('japanese','sushi'), 
+           title = "Japanese cuisine", 
+           sigma = 500)
+densityMap(x = resto, cuisine = c('korean'), 
+           title = "Korean cuisine", 
+           sigma = 500)
+densityMap(x = resto, cuisine = c('asian', "thai", "vietnamese", "chinese"), 
+           title = "Other asian cuisine", 
+           sigma = 500)
+densityMap(x = resto, cuisine = c('indian'), 
+           title = "Indian cuisine", 
+           sigma = 500)
+densityMap(x = resto, cuisine = c('pizza','italian'), 
+           title = "Italian cuisine", 
+           sigma = 500)
+```
+
+# Reproducibility Information
 
 ```{r}
 sessionInfo()
