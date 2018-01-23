@@ -1,7 +1,7 @@
 ---
-title: "Cartographic Explorations of the OpenStreetMap Database"
+title: "Cartographic Explorations of the OpenStreetMap Database with R"
 author: "Timothée Giraud"
-date: "27 novembre 2017"
+date: "2017-01-23"
 output: 
   html_document:
     fig_height: 4.6
@@ -14,7 +14,9 @@ output:
 
 <br>
 
-> This document contains a few cartographic explorations of the OpenStreetMap database
+> This document contains a few cartographic explorations of the OpenStreetMap database.
+
+Code & data: [https://github.com/rCarto/caRtosm](https://github.com/rCarto/caRtosm)
 
 
 # Downloading and Cleaning Data
@@ -30,9 +32,9 @@ Results will be `osmdata` objects containing the bounding box, call to the API a
 
 
 ```{r, eval=FALSE}
-library(osmdata)
-library(sf)
 library(units)
+library(sf)
+library(osmdata)
 
 # define a bounding box
 q0 <- opq(bbox = c(2.2247, 48.8188, 2.4611, 48.9019)) 
@@ -130,7 +132,7 @@ quartier <- quartier[substr(quartier$ref.INSEE,1,2)==75,]
 metro <- st_intersection(x = metro, y = paris)
 metro <- metro[metro$station%in%"subway", ]
 metro <- metro[metro$railway%in%"station",]
-metro <- metro[metro$STIF.zone%in%1,]
+
 
 ## We only keep restaurants within Paris boundaries
 resto <- resto[resto$amenity%in%"restaurant",]
@@ -139,8 +141,7 @@ resto <- resto[,"cuisine"]
 resto <- st_intersection(x = resto, y = paris)
 resto$cuisine <- as.character(resto$cuisine)
 
-# create a data folder
-dir.create("data")
+# save data to avoid over downloading
 save(list= c("paris", "quartier", "seine", "parc", "bars", "metro", "resto"), 
      file = "data/paname.RData", compress = "xz")
 ```
@@ -172,13 +173,14 @@ plot(paris, add=T, lwd = 0.7)
 legend(x = "right", legend = c("subway stations", "restaurants", "bars"), 
        col = c("#005050", "#ff0000", "#0000ff"), 
        pch = 20, pt.cex = c(1,0.2,0.2), cex = 0.7, bty = 'n')
-layoutLayer(title = "Paris", scale = 1,
+layoutLayer(title = "OSM data on Paris", scale = 1,
             north = T,
             tabtitle = TRUE, frame = FALSE,
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
 ```
 
+Note that it is mandatory to credit OpenStreetMap on maps that use its data. 
 
 
 # Bars in Paris
@@ -201,7 +203,7 @@ propSymbolsLayer(x = quartier, var = "nbar", inches = 0.2, col = "red",
                  legend.pos = "topright", 
                  legend.title.txt = "Number of bars")
 plot(paris, add=T, lwd = 0.7)
-layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
+layoutLayer(title = "How Many Bars in the Neighbourhood?", scale = 1,
             tabtitle = TRUE, frame = F, 
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
@@ -221,7 +223,7 @@ plot(parc, col = "#E2CCB5", border = NA, add=T)
 plot(seine, col = "#AAD3DF", add=T, lwd = 4)
 plot(st_geometry(quartier), col = NA,lty = 2, lwd = 0.2, add=T)
 plot(paris, add=T, lwd = 0.7)
-layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
+layoutLayer(title = "How Many Bars in the Neighbourhood?", scale = 1,
             tabtitle = TRUE, frame = F, 
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
@@ -243,7 +245,7 @@ propSymbolsChoroLayer(x = quartier, var = "nbar", var2 = "dbar",
                  legend.var2.title.txt = "Bars bensity\nper km2",
                  legend.var.title.txt = "Number of bars")
 plot(paris, add=T, lwd = 0.7)
-layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
+layoutLayer(title = "How Many Bars in the Neighbourhood?", scale = 1,
             tabtitle = TRUE, frame = F, 
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
@@ -282,9 +284,9 @@ propSymbolsChoroLayer(x = metro, var = "nbar", var2 = "nbar",
                       legend.var.pos = "topright", border = "grey50",
                       legend.var2.values.rnd = 0,
                       legend.var2.pos = "right",legend.var.style = "e",
-                      legend.var.title.txt = "Number of bars\naround the station", 
-                      legend.var2.title.txt = "Number of bars\naround the station")
-layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
+                      legend.var.title.txt = "Number of bars\naround the station\n(less than 381m away)", 
+                      legend.var2.title.txt = "Number of bars\naround the station\n(less than 381m away)")
+layoutLayer(title = "How Many Bars around my Subway Station?", scale = 1,
             tabtitle = TRUE, frame = F, 
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
@@ -308,7 +310,7 @@ metrounp <- metrounp[order(metrounp$nbar, decreasing = T),]
 metrounp$size <- sqrt(metrounp$nbar*15 / pi)
 # create a label
 metrounp$label <- paste0("<b>", metrounp$name, "</b> <br>", 
-                         metrounp$nbar," bars à proximité.")
+                         metrounp$nbar," bars nearby.")
 # create the interactive map...
 m <- leaflet(padding = 0)
 m <- addTiles(m)
@@ -338,7 +340,7 @@ bb <- as(bars, "Spatial")
 bbowin <- as.owin(as(paris, "Spatial"))
 pts <- coordinates(bb)
 p <- ppp(pts[,1], pts[,2], window=bbowin)
-ds <- density.ppp(p, sigma = 200, eps = c(20,20), kernel="epanechnikov")
+ds <- density.ppp(p, sigma = 200, eps = c(20,20))
 rasdens <- raster(ds) * 1000 * 1000
 rasdens <- rasdens+1
 par(mar = c(0,0,1.2,0))
@@ -346,7 +348,7 @@ bks <- getBreaks(values(rasdens), nclass = 12, method = "equal")
 cols <- colorRampPalette(c("black","#940000", "white"))(length(bks)-1)
 plot(paris, col = NA, border = NA, main="", bg = "#FBEDDA")
 plot(rasdens, breaks= bks, col=cols, add = T,legend=F)
-legendChoro(pos = "topright",cex = 0.7,
+legendChoro(pos = "topright",cex = 0.7, title.cex = 0.7,
             title.txt = "Bar density\nKDE, sigma=200m\n(bars per km2)",
             breaks = bks-1, nodata = FALSE,values.rnd = 0,
             col = cols)
@@ -356,7 +358,7 @@ plot(quartier$geometry, add=T, border = "white",lty = 2, lwd = 0.1)
 plot(bars, add=T, col = "#0000ff90", pch = 20, cex = 0.1)
 plot(paris, col = NA, add=T)
 north(pos = c(661171.8,6858500))
-layoutLayer(title = "Spatial Distribution of Bars in Paris", scale = 1,
+layoutLayer(title = "Bar Density in Paris", scale = 1,
             tabtitle = TRUE, frame = FALSE,
             author = "Map data © OpenStreetMap contributors, under CC BY SA.", 
             sources = "cartography 2.0.2") 
@@ -421,7 +423,7 @@ densityMap(x = resto, cuisine = c('korean'),
            title = "Korean cuisine", 
            sigma = 500)
 densityMap(x = resto, cuisine = c('asian', "thai", "vietnamese", "chinese"), 
-           title = "Other asian cuisine", 
+           title = "Chinese and other\nasian cuisine", 
            sigma = 500)
 densityMap(x = resto, cuisine = c('indian'), 
            title = "Indian cuisine", 
