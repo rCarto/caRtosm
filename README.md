@@ -1,5 +1,7 @@
-# caRtosm
-[Cartographic explorations of the OpenStreetMap database](https://rcarto.github.io/caRtosm/index.html)
+# [Cartographic explorations of the OpenStreetMap database with R](https://rcarto.github.io/caRtosm/index.html)
 
+![](img/barsOSM.png)
 
-![](img/bars.png)
+<br>
+
+[Blog post](https://rgeomatic.hypotheses.org/?p=1244)
